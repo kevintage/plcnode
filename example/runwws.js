@@ -4,26 +4,25 @@ var PlcNode = require('../index.js');
 var plcNode = new PlcNode('192.168.0.11', '502', 1);
 
 var WebSocket = require('ws');
-var ws = new WebSocket('ws://192.168.1.109:1880');
+var ws = new WebSocket('ws://192.168.1.105:1880');
 
-ws.on('open', function open() {
-    plcNode.start(function (err) {
-        if (!err) {
-            console.log('ready');
-        }
-    });
+plcNode.on('connect', function () {
+    console.log('modbus start');
 });
 
+ws.on('open', function open() {
+    console.log('ready');
+});
 
-plcNode.on ('pressureConti', function (bar) { 
+plcNode.on('pressureConti', function (bar) { 
     ws.send(JSON.stringify({"type": "pressure", "value": bar}));
 });
 
-plcNode.on ('pumpConti', function (lHr) { 
+plcNode.on('pumpConti', function (lHr) { 
     ws.send(JSON.stringify({"type": "pump", "value": lHr}));
 });
             
-plcNode.on ('phConti', function (val) { 
+plcNode.on('phConti', function (val) { 
     ws.send(JSON.stringify({"type": "ph", "value": val}));
 });
 
@@ -57,18 +56,11 @@ ws.on('message', function incoming(data) {
             plcNode.clear();
             break;
         case 'start':
-            plcNode.start(function (err) {
-                if (!err) {
-                    console.log('modbus start');
-                }
-            });
+            plcNode.start();
             break;
         case 'stop':
-            plcNode.stop(function (err) {
-                if (!err) {
-                    console.log('modbus close');
-                }
-            });
+            plcNode.stop();
+            console.log('modbus stop');
             break;
         default:
             return ;
