@@ -23,13 +23,15 @@ describe('read sensor', function() {
         it('should be a function', function() {
             expect(plcNode.readSensor).to.be.a('function');
         });
-
-        it('get data', function(done) {
-            plcNode.readSensor('pressure', function (err, data) {                  
-                expect(_.isString(data)).to.be.true;
-                done();
-            });  
-        });
+        
+        for (var keys in plcNode.sensorInfo) {
+            it('read '+ keys, function(done) {
+                plcNode.readSensor(keys, function (err, data) {                  
+                    expect(_.isString(data)).to.be.true;
+                    done();
+                });  
+            });
+	    }
     });
 });
 
@@ -38,14 +40,15 @@ describe('read sensor at intervals', function() {
         it('should be a function', function() {
             expect(plcNode.readSensorInt).to.be.a('function');
         });
-        
-        it('get data', function(done) {
-            plcNode.once('dataInt', function (data) { 
-                expect(_.isString(data)).to.be.true;
-                done();
+        for (var keys in plcNode.sensorInfo) {
+            it('read '+ keys+' at interval', function(done) {
+                plcNode.once('dataInt', function (data) {
+                    expect(_.isString(data)).to.be.true;
+                    done();
+                });
+                plcNode.readSensorInt(keys ,500);
             });
-            plcNode.readSensorInt('pump',500);
-        });
+	    }
     });
 });
 
@@ -54,11 +57,12 @@ describe('clear setinterval', function() {
         it('should be a function', function() {    
             expect(plcNode.clear).to.be.a('function');
         });
-      
-        it('clear setnterval', function(done) {
-            plcNode.clear();
-            expect(_.isNull(plcNode.sensorInt.pump._repeat)).to.be.true;
-            done();
-        });
+        for (var keys in plcNode.sensorInfo) {      
+            it('clear setinterval of read '+keys, function(done) {
+                plcNode.clear();
+                expect(_.isNull(plcNode.sensorInt[keys]._repeat)).to.be.true;
+                done();
+            });
+	    }
     });
 });
