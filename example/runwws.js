@@ -1,64 +1,40 @@
 'use strict';
 
 var PlcNode = require('../index.js');
-var plcNode = new PlcNode('192.168.0.11', '502', 1);
+var plcNode = new PlcNode('192.168.0.11', '502', 1, {"pressure": 6001, "pump": 6003, "ph": 6001});
 
 var WebSocket = require('ws');
-var ws = new WebSocket('ws://192.168.1.105:1880');
+var ws = new WebSocket('ws://192.168.1.110:1880');
 
 plcNode.on('connect', function () {
     console.log('modbus start');
+});
+
+plcNode.on('dataInt', function (data) { 
+    ws.send(data);
 });
 
 ws.on('open', function open() {
     console.log('ready');
 });
 
-plcNode.on('pressureConti', function (bar) { 
-    ws.send(JSON.stringify({"type": "pressure", "value": bar}));
-});
-
-plcNode.on('pumpConti', function (lHr) { 
-    ws.send(JSON.stringify({"type": "pump", "value": lHr}));
-});
-            
-plcNode.on('phConti', function (val) { 
-    ws.send(JSON.stringify({"type": "ph", "value": val}));
-});
-
-ws.on('message', function incoming(data) {
-    switch (data) {
-        case 'pressure':
-            plcNode.readSensor('pressure', function (err, bar) {
-                ws.send(JSON.stringify({"type": "pressure", "value": bar}));
-            });
-            break;
-        case 'pump':
-            plcNode.readSensor('pump', function (err, lHr) {
-                ws.send(JSON.stringify({"type": "pump", "value": lHr}));
-            });
-            break;
-        case 'ph':
-            plcNode.readSensor('ph', function (err, val) {
-                ws.send(JSON.stringify({"type": "ph", "value": val}));
+ws.on('message', function incoming(req) {
+    switch (true) {
+        case JSON.parse(req).interval == -1:
+            plcNode.readSensor(JSON.parse(req).type, function (err, data) {
+                ws.send(data);
             });
             break; 
-        case 'pressureConti':
-            plcNode.readSensorConti('pressure');
+        case JSON.parse(req).interval > 0:
+            plcNode.readSensorInt(JSON.parse(req).type, JSON.parse(req).interval);
             break;
-        case 'pumpConti':
-            plcNode.readSensorConti('pump');
-            break;
-        case 'phConti':
-            plcNode.readSensorConti('ph');
-            break;
-        case 'clear':
+        case JSON.parse(req).type == 'clear':
             plcNode.clear();
             break;
-        case 'start':
+        case JSON.parse(req).type == 'start':
             plcNode.start();
             break;
-        case 'stop':
+        case JSON.parse(req).type == 'stop':
             plcNode.stop();
             console.log('modbus stop');
             break;
