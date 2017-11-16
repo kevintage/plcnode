@@ -29,9 +29,11 @@ function PlcNode(host, port, unitId, sensorInfo) {
         self.emit('error');
     });
 
-    this.client.connect();
+//    this.client.connect();
 
-    this.modbusStatus = true;
+//    this.modbusStatus = true;
+
+    this.modbusStatus = false;
 
     this.sensorInfo = sensorInfo;
 
@@ -57,7 +59,7 @@ PlcNode.prototype.stop = function () {
 
 PlcNode.prototype.readSensor = function (sensor, callback) {
     var address = this.sensorInfo[sensor],
-        value;
+        value,value2;
         
     if (address == undefined) {
         throw new TypeError('There is no such name in the sensorInfo list');
@@ -67,12 +69,12 @@ PlcNode.prototype.readSensor = function (sensor, callback) {
        return ;  
     }
     
-    this.client.readHoldingRegisters(address, 1).then(function (resp) {
-        value = resp.register[0].toString(16);
-        
+    this.client.readHoldingRegisters(address, 2).then(function (resp) {
+        value = resp.register[0].toString(16);//+resp.register[1].toString(16);
         while (value.length !== 8) {
             value = value + '0';
         }
+        
         value = new Buffer(value, 'hex');
         callback(null, JSON.stringify({"type": sensor, "value": value.readFloatBE(0)}));
     }, callback);
@@ -94,12 +96,12 @@ PlcNode.prototype.readSensorInt = function (sensor, interval) {
     clearInterval(this.sensorInt[sensor]);    
     
     this.sensorInt[sensor] = setInterval(function () {
-        self.client.readHoldingRegisters(address, 1).then(function (resp) {
-            value = resp.register[0].toString(16);
-        
+        self.client.readHoldingRegisters(address, 2).then(function (resp) {
+            value = resp.register[0].toString(16);//+resp.register[1].toString(16);
             while (value.length !== 8) {
                 value = value + '0';
             }
+            
             value = new Buffer(value, 'hex');
             self.emit('dataInt', JSON.stringify({"type": sensor, "value": value.readFloatBE(0)}));
         }, self.emit);

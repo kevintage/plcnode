@@ -1,10 +1,10 @@
 'use strict';
 
 var PlcNode = require('../index.js');
-var plcNode = new PlcNode('192.168.0.11', '502', 1, {"pressure": 6001, "pump": 6003, "ph": 6001});
+var plcNode = new PlcNode('192.168.0.11', '502', 1, {"pressure": 6001, "pump": 6003, "ph": 6005});
 
 var WebSocket = require('ws');
-var ws = new WebSocket('ws://192.168.1.110:1880');
+var ws = new WebSocket('ws://192.168.1.117:1880');
 
 plcNode.on('connect', function () {
     console.log('modbus start');
